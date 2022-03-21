@@ -40,7 +40,7 @@ class Progressbar extends React.Component {
     return(
     <div className='class-progressbar'>
       <small>{this.props.starttime}</small>
-      <div id='id-progressbar'>
+      <div id='id-progressbar' onClick={this.props.onClick}>
         <div id='id-seekobj'></div> 
       </div>
       <small>{this.props.endtime}</small>
@@ -150,13 +150,9 @@ class ControlTable extends React.Component {
     this.setState({
       currenttime: player.currentTime
     });
-    console.log(this.state.progressbar.offsetWidth);
-    console.log(this.state.seekobje.offsetWidth);
     let timelinewidth = this.state.progressbar.offsetWidth - this.state.seekobje.offsetWidth;
     this.state.seekobje.style.marginLeft = (timelinewidth * (player.currentTime / player.duration))+ "px";
-
   }
-
   getElementById() {
     this.setState({
       player: document.getElementById('id-player'),
@@ -171,6 +167,11 @@ class ControlTable extends React.Component {
   }
   componentWillUnmount() {
     clearInterval(this.timerID);
+  }
+  clickprogressbar(event) {
+    this.state.player.currentTime = this.state.player.duration * 
+    (event.clientX - this.state.progressbar.getBoundingClientRect().left) / 
+    (this.state.progressbar.offsetWidth - this.state.seekobje.offsetWidth);
   }
 
   render() {
@@ -194,42 +195,33 @@ class ControlTable extends React.Component {
           starttime={this.fancyTimeFormat(this.state.currenttime)}
           getElementById={() => this.getElementById()}
           currentTime={() => this.currentTime()}
+          onClick={(event) => this.clickprogressbar(event)}
         />
       </div>
     );
   }
 }
 
-function Tablebody(props) {
-  return(
-    <tbody>
-      <tr>
-        <td>{props.title}</td>
-        <td>{props.singer}</td>
-        <td>{props.time}</td>
-        <td><button>X</button></td>
-      </tr>
-    </tbody>
-  );
-}
-
 class Muisclist extends React.Component {
-  render() {
-    const rows = [];
-    this.props.data.forEach((data) => {
-      rows.push(
-        <Tablebody
-        key={data.title} 
-        title={data.title}
-        singer={data.singer}
-        time={data.time}
-        />
-      );
-    });
 
+  constructor(props) {
+    super(props);
+    this.state = {
+      rows: this.props.data
+    }
+  }
+
+  spliceRow(index) {
+    this.state.rows.splice(index,1);
+    this.setState({
+      row: this.state.rows
+    });
+  }
+
+  render() {
     return(
       <div className='calss-musiclist'>
-        <table>
+        <table id='id-table'>
           <thead>
             <tr>
               <th>标题</th>
@@ -238,7 +230,18 @@ class Muisclist extends React.Component {
               <th>操作</th>
             </tr>
           </thead>
-          {rows}
+          <tbody>
+            {this.state.rows.map((row,index) => {
+              return(
+                <tr key={row.title}>
+                  <td>{row.title}</td>
+                  <td>{row.singer}</td>
+                  <td>{row.time}</td>
+                  <td><button onClick={() => this.spliceRow(index)}>X</button></td>
+                </tr>
+              )
+            })}
+          </tbody>
         </table>
       </div>
     );
@@ -246,7 +249,13 @@ class Muisclist extends React.Component {
 }
 
 
-
+/*以下为修复的bug
+*1.删除当前选中歌曲会报错导致程序崩溃 
+*2.播放过程中如果删除当前选择歌曲会继续播放
+*3.以及音乐播放完毕未切换播放图标
+*4.进度条点击反应过慢
+*同时程序结构十分丑陋需要重构
+*/
 class App extends React.Component {
   render() {
     return(

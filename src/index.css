@@ -76,9 +76,10 @@ th, td {
   text-align: left;
   padding: 5px;
 }
-tbody:nth-child(even) {
+tr:nth-child(even) {
   background-color: #f2f2f2;
 }
+
 .calss-musiclist{
   height: 300px;
   overflow-y: scroll;
